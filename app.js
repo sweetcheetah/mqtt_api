@@ -8,12 +8,27 @@ var indexRouter = require('./routes/index');
 var topicRouter = require('./routes/topic');
 
 var app = express();
+var cors = require('cors')
 
 var current_value = ""
 var last_update = ""
 // TODO multiple topic support 
 // { topic1: { last_update: "date string", current_value: "some string" },
 // topic2: {} }
+
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+app.use(logger('dev'));
+app.use(express.json());
+app.use(cors())
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', indexRouter);
 
 var mqtt_client = require('./data/mqtt-topics')
 mqtt_client.on('message', function (topic, message) {
@@ -34,18 +49,6 @@ mqtt_client.on('message', function (topic, message) {
     last_update = date_string
   }
 }) 
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
 
 app.get('/topic/:topicname/current', (req,res) => {
   res.json({topic: req.params.topicname, value: current_value, unit: 'farenheit', unit_abbreviation: 'F'})
@@ -70,5 +73,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 module.exports = app;
