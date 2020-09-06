@@ -10,8 +10,8 @@ var topicRouter = require('./routes/topic');
 var app = express();
 var cors = require('cors')
 
-var current_value = ""
-var last_update = ""
+var current_value = {}
+var last_update = {}
 // TODO multiple topic support 
 // { topic1: { last_update: "date string", current_value: "some string" },
 // topic2: {} }
@@ -44,14 +44,19 @@ mqtt_client.on('message', function (topic, message) {
   let date_string = year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds
 
   if ( message.toString() !== current_value ) {
-    console.log("%s;%s;%s", date_string, topic, message.toString())
-    current_value = message.toString()
-    last_update = date_string
+    const re = /\//gi;
+    const topic_with_subs = topic.replace(re, '-')
+    console.log("%s;%s;%s", date_string, topic_with_subs, message.toString());
+    current_value[topic_with_subs] = message.toString();
+    last_update[topic_with_subs] = date_string;
   }
 }) 
 
 app.get('/topic/:topicname/current', (req,res) => {
-  res.json({topic: req.params.topicname, value: current_value, unit: 'farenheit', unit_abbreviation: 'F'})
+  res.json({
+    topic: req.params.topicname,
+    value: current_value[req.params.topicname]
+  })
 });
 
 app.get('/topic/:topicname/past/:unit/:quantity', (req,res) => {
