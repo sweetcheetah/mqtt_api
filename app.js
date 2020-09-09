@@ -55,7 +55,8 @@ mqtt_client.on('message', function (topic, message) {
 app.get('/topic/:topicname/current', (req,res) => {
   res.json({
     topic: req.params.topicname,
-    value: current_value[req.params.topicname]
+    value: current_value[req.params.topicname],
+    lastUpdated: last_update[req.params.topicname]
   })
 });
 
